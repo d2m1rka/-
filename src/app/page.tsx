@@ -1,37 +1,60 @@
 "use client"
 
-import { nanoid } from "nanoid"
-import { useEffect, useState } from "react"
+import { Suspense } from "react"
+import { useUsername } from "@/hooks/use.username"
+import { client } from "@/lib/client"
+import { useMutation } from "@tanstack/react-query"
+import { useRouter, useSearchParams } from "next/navigation"
 
-const ANIMALS = ["wolf", "hawk", "bear", "shark"]
-const STORAGE_KEY = "chat_username"
-
-const generateUsername = () => {
-  const word = ANIMALS[Math.floor(Math.random() * ANIMALS.length)]
-  return `anonymous-${word}-${nanoid(5)}`
+const Page = () => {
+  return <Suspense><Lobby /></Suspense>
 }
 
-export default function Home() {
-  const [username, setUsername] = useState("");
+export default Page
 
-  useEffect(() => {
-    const main = () => {
-      const stored = localStorage.getItem(STORAGE_KEY)
+function Lobby() {
+  const { username } = useUsername()
+  const router = useRouter()
 
-      if(stored) {
-        setUsername(stored)
-        return
+ const searchParams = useSearchParams()
+ const wasDestroyed = searchParams.get("destroyed") === "true"
+ const error = searchParams.get("error")
+
+  const {mutate: createRoom } = useMutation({
+    mutationFn: async () => {
+      const res = await client.room.create.post()
+
+      if(res.status === 200) {
+         router.push(`/room/${res.data?.roomId}`)
       }
+    },
+  })
 
-      const generated = generateUsername()
-      localStorage.setItem(STORAGE_KEY, generated)
-      setUsername(generated)
-    }
-    main()
-  }, [])
-
-  return  <main className="flex min-h-screen flex-col items-center justify-center p-4">
+  return ( <main className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
+
+    {wasDestroyed && ( <div className="bg-red-950/50 border border-red-900 p-4 text-center">
+    <p className="text-red-500 text-sm font-bold">КОМНАТА БЫЛА УНИЧТОЖЕНА</p>
+    <p className="text-zinc-500 text-xs mt-1">
+      Все сообщения были удалены навсегда.
+    </p>
+    </div>
+    )}
+    {error === "room-not-found" && ( <div className="bg-red-950/50 border border-red-900 p-4 text-center">
+    <p className="text-red-500 text-sm font-bold">КОМНАТА НЕ НАЙДЕНА</p>
+    <p className="text-zinc-500 text-xs mt-1">
+      Возможно, срок действия комнаты истек или её вовсе не существовало.
+    </p>
+    </div>
+    )}
+    {error === "room-full" && ( <div className="bg-red-950/50 border border-red-900 p-4 text-center">
+    <p className="text-red-500 text-sm font-bold">КОМНАТА ЗАПОЛНЕНА</p>
+    <p className="text-zinc-500 text-xs mt-1">
+      К комнате уже подключено более 2 пользователей.
+    </p>
+    </div>
+    )}
+
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold tracking-tight text-green-500">
             teleGGrama
@@ -41,7 +64,7 @@ export default function Home() {
         <div className="border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-md">
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="flex items-center text-zinc-500">Your Identity</label>
+              <label className="flex items-center text-zinc-500">Ваш Идентификатор:</label>
 
               <div className="flex items-center gap-3">
                 <div className="flex-1 bf-zinc-950 border border-zinc-800 p-3 text-sm text-zinc-400 font-mono">
@@ -50,11 +73,11 @@ export default function Home() {
               </div>
             </div>
 
-            <button className="w-full bg-zinc-100 text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black transition-colors mt-2 cursor-pointer disabled:opacity-50">
-              CREATE SECURE ROOM
+            <button onClick={() => createRoom()} className="w-full bg-zinc-100 text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black transition-colors mt-2 cursor-pointer disabled:opacity-50">
+              СОЗДАТЬ ПРИВАТНЫЙ ЧАТ
               </button>
           </div>
         </div>
       </div>
-  </main>
+  </main>)
 }
