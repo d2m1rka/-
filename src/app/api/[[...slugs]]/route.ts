@@ -1,5 +1,6 @@
 import { redis } from '@/shared/api/redis'
 import { Elysia, t } from 'elysia'
+import { cors } from '@elysiajs/cors'
 import { nanoid } from 'nanoid'
 import { connected } from 'process'
 import { authMiddleware } from './auth'
@@ -94,8 +95,10 @@ const rooms = new Elysia({ prefix: "/room" })
   }, {query: z.object( {roomId: z.string() }) }
 )
 
-const app = new Elysia({ prefix: '/api' }).use(rooms)
-  .use(rooms).use(messages)
+const app = new Elysia({ prefix: '/api' })
+  .use(cors())
+  .use(rooms)
+  .use(messages)
 
 export const GET = app.handle
 export const POST = app.handle 

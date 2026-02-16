@@ -3,7 +3,12 @@
     "allow": [
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(curl -s \"https://telegram.vercel.app/api/room/create\" -X POST -H \"Content-Type: application/json\" -d '{\"\"username\"\":\"\"test\"\"}' -v)",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
