@@ -1,4 +1,4 @@
-import { redis } from "@/lib/redis"
+import { redis } from "@/shared/api/redis"
 import { error } from "console"
 import Elysia from "elysia"
 import { connect } from "http2"

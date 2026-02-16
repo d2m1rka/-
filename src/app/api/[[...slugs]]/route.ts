@@ -1,13 +1,12 @@
-import { redis } from '@/lib/redis'
+import { redis } from '@/shared/api/redis'
 import { Elysia, t } from 'elysia'
 import { nanoid } from 'nanoid'
 import { connected } from 'process'
 import { authMiddleware } from './auth'
 import { z } from "zod"
 import { text } from 'stream/consumers'
-import { Message, realtime } from '@/lib/realtime'
-
-const ROOM_TTL_SECONDS = 60 * 10
+import { Message, realtime } from '@/shared/api/realtime'
+import { ROOM_TTL_SECONDS } from '@/shared/config'
 
 const rooms = new Elysia({ prefix: "/room" })
   .post("/create", async () => {
