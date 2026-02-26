@@ -7,20 +7,16 @@ import { useRoomTTL } from "@/entities/room"
 export const useRoomTimer = (roomId: string) => {
   const router = useRouter()
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
-  const initialized = useRef(false)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const { data: ttlData } = useRoomTTL(roomId)
 
   useEffect(() => {
-    if (ttlData?.ttl === undefined || initialized.current) return
-    initialized.current = true
+    if (ttlData?.ttl === undefined || intervalRef.current !== null) return
+
     setTimeRemaining(ttlData.ttl)
-  }, [ttlData])
 
-  useEffect(() => {
-    if (timeRemaining === null || timeRemaining <= 0) return
-
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev === null || prev <= 1) {
           router.push("/?destroyed=true")
@@ -29,9 +25,13 @@ export const useRoomTimer = (roomId: string) => {
         return prev - 1
       })
     }, 1000)
+  }, [ttlData, router])
 
-    return () => clearInterval(interval)
-  }, [router]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [])
 
   return { timeRemaining }
 }
