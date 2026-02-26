@@ -41,6 +41,13 @@ export default async function middleware(req: NextRequest) {
                 ? JSON.parse(meta.connected)
                 : []
 
+        // Block bots/crawlers (e.g. Telegram link preview) from consuming room slots
+        const userAgent = req.headers.get("user-agent") ?? ""
+        const isBot = /bot|crawler|spider|preview|facebookexternalhit|telegrambot|whatsapp|twitter/i.test(userAgent)
+        if (isBot) {
+            return NextResponse.next()
+        }
+
         const existingToken = req.cookies.get("x-auth-token")?.value
 
         if(existingToken && connected.includes(existingToken)) {
